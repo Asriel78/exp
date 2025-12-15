@@ -1,0 +1,52 @@
+package expression;
+
+import java.math.BigInteger;
+import java.util.List;
+
+public class Const implements TripleExpression {
+    private final Number value;
+    
+    public Const(int value) {
+        this.value = value;
+    }
+    
+    public Const(BigInteger value) {
+        this.value = value;
+    }
+    
+    @Override
+    public int evaluate(int x) {
+        return value.intValue();
+    }
+    
+    @Override
+    public BigInteger evaluateBi(List<BigInteger> variables) {
+        if (value instanceof BigInteger) {
+            return (BigInteger) value;
+        }
+        return BigInteger.valueOf(value.intValue());
+    }
+    
+    @Override
+    public String toString() {
+        return value.toString();
+    }
+    
+    @Override
+    public String toMiniString() {
+        return toString();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Const other = (Const) obj;
+        return value.equals(other.value);
+    }
+    
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+}
