@@ -3,8 +3,9 @@ package expression;
 import java.math.BigInteger;
 import java.util.List;
 
-public class Variable implements TripleExpression {
-    private final Object identifier; // может быть String или Integer
+// Variable реализует ОБА интерфейса: TripleExpression И BigIntegerListExpression
+public class Variable implements TripleExpression, BigIntegerListExpression, Expression {
+    private final Object identifier;
     
     public Variable(String name) {
         this.identifier = name;
@@ -14,11 +15,42 @@ public class Variable implements TripleExpression {
         this.identifier = index;
     }
     
+    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
-        return x;
+        if (identifier instanceof String) {
+            String name = (String) identifier;
+            if ("x".equals(name)) return x;
+        }
+        if (identifier instanceof Integer) {
+            int index = (Integer) identifier;
+            if (index == 0) return x;
+        }
+        throw new IllegalArgumentException("Invalid variable for single argument");
     }
     
+    // Для TripleExpression (три переменные)
+    @Override
+    public int evaluate(int x, int y, int z) {
+        if (identifier instanceof String) {
+            String name = (String) identifier;
+            switch (name) {
+                case "x": return x;
+                case "y": return y;
+                case "z": return z;
+                default: throw new IllegalArgumentException("Unknown variable: " + name);
+            }
+        }
+        int index = (Integer) identifier;
+        switch (index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            default: throw new IllegalArgumentException("Invalid variable index: " + index);
+        }
+    }
+    
+    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         if (identifier instanceof Integer) {
@@ -51,6 +83,6 @@ public class Variable implements TripleExpression {
     
     @Override
     public int hashCode() {
-        return identifier.hashCode();
+        return identifier.hashCode() * 31 + getClass().hashCode();
     }
 }

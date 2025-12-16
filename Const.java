@@ -3,7 +3,7 @@ package expression;
 import java.math.BigInteger;
 import java.util.List;
 
-public class Const implements TripleExpression {
+public class Const implements TripleExpression, BigIntegerListExpression, Expression {
     private final Number value;
     
     public Const(int value) {
@@ -14,11 +14,19 @@ public class Const implements TripleExpression {
         this.value = value;
     }
     
+    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
         return value.intValue();
     }
     
+    // Для TripleExpression (три переменные)
+    @Override
+    public int evaluate(int x, int y, int z) {
+        return value.intValue();
+    }
+    
+    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         if (value instanceof BigInteger) {
@@ -47,6 +55,6 @@ public class Const implements TripleExpression {
     
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return value.hashCode() * 31 + getClass().hashCode();
     }
 }

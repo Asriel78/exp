@@ -3,7 +3,7 @@ package expression;
 import java.math.BigInteger;
 import java.util.List;
 
-public abstract class BinaryOperation implements TripleExpression {
+public abstract class BinaryOperation implements TripleExpression, BigIntegerListExpression, Expression {
     protected final TripleExpression left;
     protected final TripleExpression right;
     
@@ -18,14 +18,29 @@ public abstract class BinaryOperation implements TripleExpression {
     protected abstract int getPriority();
     protected abstract boolean isAssociative();
     
+    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
-        return apply(left.evaluate(x), right.evaluate(x));
+        return apply(
+            left instanceof Expression ? ((Expression) left).evaluate(x) : left.evaluate(x, 0, 0),
+            right instanceof Expression ? ((Expression) right).evaluate(x) : right.evaluate(x, 0, 0)
+        );
     }
     
+    // Для TripleExpression (три переменные)
+    @Override
+    public int evaluate(int x, int y, int z) {
+        return apply(left.evaluate(x, y, z), right.evaluate(x, y, z));
+    }
+    
+    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
-        return applyBi(left.evaluateBi(variables), right.evaluateBi(variables));
+        BigInteger leftVal = left instanceof BigIntegerListExpression ? 
+            ((BigIntegerListExpression) left).evaluateBi(variables) : null;
+        BigInteger rightVal = right instanceof BigIntegerListExpression ? 
+            ((BigIntegerListExpression) right).evaluateBi(variables) : null;
+        return applyBi(leftVal, rightVal);
     }
     
     @Override
@@ -50,12 +65,31 @@ public abstract class BinaryOperation implements TripleExpression {
         if (!(right instanceof BinaryOperation)) return false;
         BinaryOperation rightOp = (BinaryOperation) right;
         
+        // Если приоритет правого операнда ниже - нужны скобки
         if (rightOp.getPriority() < getPriority()) {
             return true;
         }
         
+        // Если приоритет одинаковый
         if (rightOp.getPriority() == getPriority()) {
-            return !isAssociative();
+            // Если операции одинаковые
+            if (getClass().equals(rightOp.getClass())) {
+                // Для ассоциативных (+ и +, * и *) скобки не нужны
+                // Для неассоциативных (- и -, / и /) скобки НУЖНЫ!
+                // Например: 1 - (2 - 3) ≠ 1 - 2 - 3
+                return !isAssociative();
+            }
+            
+            // Если операции разные
+            // Для неассоциативной текущей операции скобки всегда нужны
+            if (!isAssociative()) {
+                return true;
+            }
+            
+            // Для ассоциативной текущей операции:
+            // + с - : можно без скобок (10 + 3 - 2 = 10 + (3 - 2))
+            // * с / : нужны скобки (10 * 3 / 2 ≠ 10 * (3 / 2))
+            return getPriority() == 2;
         }
         
         return false;
@@ -71,6 +105,6 @@ public abstract class BinaryOperation implements TripleExpression {
     
     @Override
     public int hashCode() {
-        return 31 * left.hashCode() + right.hashCode();
+        return (31 * left.hashCode() + right.hashCode()) * 31 + getClass().hashCode();
     }
 }
