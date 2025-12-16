@@ -3,7 +3,7 @@ package expression;
 import java.math.BigInteger;
 import java.util.List;
 
-public abstract class BinaryOperation implements TripleExpression, BigIntegerListExpression, Expression {
+public abstract class BinaryOperation implements TripleExpression, BigIntegerListExpression, Expression, ListExpression {
     protected final TripleExpression left;
     protected final TripleExpression right;
     
@@ -31,6 +31,18 @@ public abstract class BinaryOperation implements TripleExpression, BigIntegerLis
     @Override
     public int evaluate(int x, int y, int z) {
         return apply(left.evaluate(x, y, z), right.evaluate(x, y, z));
+    }
+    
+    // Для ListExpression (список Integer)
+    @Override
+    public int evaluate(List<Integer> variables) {
+        int leftVal = left instanceof ListExpression ? 
+            ((ListExpression) left).evaluate(variables) : 
+            left.evaluate(variables.get(0), 0, 0);
+        int rightVal = right instanceof ListExpression ? 
+            ((ListExpression) right).evaluate(variables) : 
+            right.evaluate(variables.get(0), 0, 0);
+        return apply(leftVal, rightVal);
     }
     
     // Для BigIntegerListExpression (список BigInteger)
