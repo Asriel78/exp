@@ -60,7 +60,7 @@ public class ExpressionParser implements ListParser {
             if (ch == '+') {
                 pos++;
                 result = new Add((TripleExpression) result, (TripleExpression) parseMultiplyDivide());
-            } else if (ch == '-') {
+            } else if (ch == '-' && !isNextChar('*')) {
                 pos++;
                 result = new Subtract((TripleExpression) result, (TripleExpression) parseMultiplyDivide());
             } else {
@@ -72,7 +72,7 @@ public class ExpressionParser implements ListParser {
     }
     
     private ListExpression parseMultiplyDivide() {
-        ListExpression result = parseUnary();
+        ListExpression result = parsePowerLog();
         
         while (true) {
             skipWhitespace();
@@ -80,12 +80,47 @@ public class ExpressionParser implements ListParser {
             
             char ch = expression.charAt(pos);
             
+            if (ch == '*' && pos + 1 < expression.length() && expression.charAt(pos + 1) == '*') {
+                break;
+            }
+            if (ch == '/' && pos + 1 < expression.length() && expression.charAt(pos + 1) == '/') {
+                break;
+            }
+            
             if (ch == '*') {
                 pos++;
-                result = new Multiply((TripleExpression) result, (TripleExpression) parseUnary());
+                result = new Multiply((TripleExpression) result, (TripleExpression) parsePowerLog());
             } else if (ch == '/') {
                 pos++;
-                result = new Divide((TripleExpression) result, (TripleExpression) parseUnary());
+                result = new Divide((TripleExpression) result, (TripleExpression) parsePowerLog());
+            } else {
+                break;
+            }
+        }
+        
+        return result;
+    }
+    
+    private ListExpression parsePowerLog() {
+        ListExpression result = parseUnary();
+        
+        while (true) {
+            skipWhitespace();
+            if (pos >= expression.length()) break;
+            
+            if (pos + 1 < expression.length()) {
+                char ch1 = expression.charAt(pos);
+                char ch2 = expression.charAt(pos + 1);
+                
+                if (ch1 == '*' && ch2 == '*') {
+                    pos += 2;
+                    result = new Power((TripleExpression) result, (TripleExpression) parsePowerLog());
+                } else if (ch1 == '/' && ch2 == '/') {
+                    pos += 2;
+                    result = new Log((TripleExpression) result, (TripleExpression) parseUnary());
+                } else {
+                    break;
+                }
             } else {
                 break;
             }
@@ -102,7 +137,6 @@ public class ExpressionParser implements ListParser {
         }
         
         if (expression.charAt(pos) == '-') {
-            int minusPos = pos;
             pos++;
             
             boolean hasSpace = (pos < expression.length() && Character.isWhitespace(expression.charAt(pos)));
@@ -216,6 +250,10 @@ public class ExpressionParser implements ListParser {
         
         pos += word.length();
         return true;
+    }
+    
+    private boolean isNextChar(char c) {
+        return pos + 1 < expression.length() && expression.charAt(pos + 1) == c;
     }
     
     private IllegalArgumentException error(String message) {
