@@ -27,7 +27,27 @@ public class ExpressionParser implements ListParser {
     
     // Уровень 1: +, - (самый низкий приоритет)
     private ListExpression parseExpression() {
-        return parseAddSubtract();
+        return parseMinMax();
+    }
+    
+    // Уровень 1.5: min, max (самый низкий приоритет)
+    private ListExpression parseMinMax() {
+        ListExpression result = parseAddSubtract();
+        
+        while (true) {
+            skipWhitespace();
+            if (pos >= expression.length()) break;
+            
+            if (checkWord("min")) {
+                result = new Min((TripleExpression) result, (TripleExpression) parseAddSubtract());
+            } else if (checkWord("max")) {
+                result = new Max((TripleExpression) result, (TripleExpression) parseAddSubtract());
+            } else {
+                break;
+            }
+        }
+        
+        return result;
     }
     
     // Уровень 2: +, -
@@ -78,7 +98,7 @@ public class ExpressionParser implements ListParser {
         return result;
     }
     
-    // Уровень 4: унарные операции (-)
+    // Уровень 4: унарные операции (-, reverse)
     private ListExpression parseUnary() {
         skipWhitespace();
         
@@ -114,6 +134,11 @@ public class ExpressionParser implements ListParser {
             
             // Иначе это унарный минус для выражения
             return new Negate((TripleExpression) parseUnary());
+        }
+        
+        // Унарная операция reverse
+        if (checkWord("reverse")) {
+            return new Reverse((TripleExpression) parseUnary());
         }
         
         return parsePrimary();
@@ -185,6 +210,31 @@ public class ExpressionParser implements ListParser {
         while (pos < expression.length() && Character.isWhitespace(expression.charAt(pos))) {
             pos++;
         }
+    }
+    
+    // Проверка и парсинг ключевого слова
+    private boolean checkWord(String word) {
+        skipWhitespace();
+        
+        if (pos + word.length() > expression.length()) {
+            return false;
+        }
+        
+        // Проверяем, совпадает ли слово
+        if (!expression.substring(pos, pos + word.length()).equals(word)) {
+            return false;
+        }
+        
+        // Проверяем, что после слова нет буквы/цифры (граница слова)
+        if (pos + word.length() < expression.length()) {
+            char next = expression.charAt(pos + word.length());
+            if (Character.isLetterOrDigit(next)) {
+                return false;
+            }
+        }
+        
+        pos += word.length();
+        return true;
     }
     
     // Создание исключения с информацией о позиции
