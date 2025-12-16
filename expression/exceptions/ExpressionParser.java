@@ -30,12 +30,10 @@ public class ExpressionParser implements ListParser {
         }
     }
     
-    // Уровень 1: +, -
     private ListExpression parseExpression() throws ParsingException {
         return parseMinMax();
     }
     
-    // Уровень 1.5: min, max
     private ListExpression parseMinMax() throws ParsingException {
         ListExpression result = parseAddSubtract();
         
@@ -55,7 +53,6 @@ public class ExpressionParser implements ListParser {
         return result;
     }
     
-    // Уровень 2: +, -
     private ListExpression parseAddSubtract() throws ParsingException {
         ListExpression result = parseMultiplyDivide();
         
@@ -79,7 +76,6 @@ public class ExpressionParser implements ListParser {
         return result;
     }
     
-    // Уровень 3: *, /
     private ListExpression parseMultiplyDivide() throws ParsingException {
         ListExpression result = parseUnary();
         
@@ -103,7 +99,6 @@ public class ExpressionParser implements ListParser {
         return result;
     }
     
-    // Уровень 4: унарные операции (-, reverse)
     private ListExpression parseUnary() throws ParsingException {
         skipWhitespace();
         
@@ -111,7 +106,6 @@ public class ExpressionParser implements ListParser {
             throw new ParsingException("Unexpected end of expression");
         }
         
-        // Унарный минус
         if (expression.charAt(pos) == '-') {
             int minusPos = pos;
             pos++;
@@ -119,16 +113,13 @@ public class ExpressionParser implements ListParser {
             boolean hasSpace = (pos < expression.length() && Character.isWhitespace(expression.charAt(pos)));
             skipWhitespace();
             
-            // Парсим отрицательное число только если НЕТ пробела после минуса
             if (!hasSpace && pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
                 return parseNumber(true);
             }
             
-            // Иначе это унарный минус для выражения
             return new CheckedNegate((TripleExpression) parseUnary());
         }
         
-        // Унарная операция reverse
         if (checkWord("reverse")) {
             return new Reverse((TripleExpression) parseUnary());
         }
@@ -136,7 +127,6 @@ public class ExpressionParser implements ListParser {
         return parsePrimary();
     }
     
-    // Уровень 5: переменные, константы, скобки
     private ListExpression parsePrimary() throws ParsingException {
         skipWhitespace();
         
@@ -146,7 +136,7 @@ public class ExpressionParser implements ListParser {
         
         char ch = expression.charAt(pos);
         
-        // Скобки
+        
         if (ch == '(') {
             pos++;
             ListExpression result = parseExpression();
@@ -158,7 +148,6 @@ public class ExpressionParser implements ListParser {
             return result;
         }
         
-        // Переменная $0, $1, $2, ...
         if (ch == '$') {
             pos++;
             if (pos >= expression.length() || !Character.isDigit(expression.charAt(pos))) {
@@ -177,7 +166,7 @@ public class ExpressionParser implements ListParser {
             return new Variable(varIndex);
         }
         
-        // Число
+        
         if (Character.isDigit(ch)) {
             return parseNumber(false);
         }
@@ -194,14 +183,12 @@ public class ExpressionParser implements ListParser {
         String numStr = expression.substring(start, pos);
         
         try {
-            // Специальная обработка для Integer.MIN_VALUE
             if (negative && numStr.equals("2147483648")) {
                 return new Const(Integer.MIN_VALUE);
             }
             
             int value = Integer.parseInt(numStr);
             if (negative) {
-                // Обычное отрицание для других чисел
                 if (value < 0) {
                     throw new ParsingException("Number overflow: -" + numStr);
                 }
@@ -209,7 +196,6 @@ public class ExpressionParser implements ListParser {
             }
             return new Const(value);
         } catch (NumberFormatException e) {
-            // Число слишком большое
             throw new ParsingException("Number too large: " + (negative ? "-" : "") + numStr);
         }
     }
@@ -231,7 +217,6 @@ public class ExpressionParser implements ListParser {
             return false;
         }
         
-        // Проверяем границу слова
         if (pos + word.length() < expression.length()) {
             char next = expression.charAt(pos + word.length());
             if (Character.isLetterOrDigit(next)) {

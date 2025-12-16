@@ -10,19 +10,16 @@ public class Negate implements TripleExpression, BigIntegerListExpression, Expre
         this.operand = operand;
     }
     
-    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
         return -operand.evaluate(x, 0, 0);
     }
     
-    // Для TripleExpression (три переменные)
     @Override
     public int evaluate(int x, int y, int z) {
         return -operand.evaluate(x, y, z);
     }
     
-    // Для ListExpression (список Integer)
     @Override
     public int evaluate(List<Integer> variables) {
         if (operand instanceof ListExpression) {
@@ -31,7 +28,6 @@ public class Negate implements TripleExpression, BigIntegerListExpression, Expre
         return -operand.evaluate(variables.get(0), 0, 0);
     }
     
-    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         if (operand instanceof BigIntegerListExpression) {

@@ -10,20 +10,13 @@ public class Reverse implements TripleExpression, BigIntegerListExpression, Expr
         this.operand = operand;
     }
     
-    // Переворачивает цифры числа: 12345 -> 54321, -12345 -> -54321
-    // Переполнение обрабатывается естественным образом (как в int)
     private int reverseInt(int value) {
-        boolean negative = value < 0;
-        
         int result = 0;
         while (value != 0) {
             int digit = value % 10;
             value /= 10;
             result = result * 10 + digit;
         }
-        
-        // Если исходное число было отрицательным, результат уже будет правильного знака
-        // благодаря тому, что % и / в Java сохраняют знак для отрицательных чисел
         return result;
     }
     
@@ -40,19 +33,16 @@ public class Reverse implements TripleExpression, BigIntegerListExpression, Expr
         return negative ? result.negate() : result;
     }
     
-    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
         return reverseInt(operand.evaluate(x, 0, 0));
     }
     
-    // Для TripleExpression (три переменные)
     @Override
     public int evaluate(int x, int y, int z) {
         return reverseInt(operand.evaluate(x, y, z));
     }
     
-    // Для ListExpression (список Integer)
     @Override
     public int evaluate(List<Integer> variables) {
         if (operand instanceof ListExpression) {
@@ -61,7 +51,6 @@ public class Reverse implements TripleExpression, BigIntegerListExpression, Expr
         return reverseInt(operand.evaluate(variables.get(0), 0, 0));
     }
     
-    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         if (operand instanceof BigIntegerListExpression) {

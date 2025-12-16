@@ -24,7 +24,7 @@ public class Min extends BinaryOperation {
     
     @Override
     protected int getPriority() {
-        return 0; // Самый низкий приоритет
+        return 0; 
     }
     
     @Override

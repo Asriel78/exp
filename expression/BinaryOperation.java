@@ -18,7 +18,6 @@ public abstract class BinaryOperation implements TripleExpression, BigIntegerLis
     protected abstract int getPriority();
     protected abstract boolean isAssociative();
     
-    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
         return apply(
@@ -27,13 +26,11 @@ public abstract class BinaryOperation implements TripleExpression, BigIntegerLis
         );
     }
     
-    // Для TripleExpression (три переменные)
     @Override
     public int evaluate(int x, int y, int z) {
         return apply(left.evaluate(x, y, z), right.evaluate(x, y, z));
     }
     
-    // Для ListExpression (список Integer)
     @Override
     public int evaluate(List<Integer> variables) {
         int leftVal = left instanceof ListExpression ? 
@@ -45,7 +42,6 @@ public abstract class BinaryOperation implements TripleExpression, BigIntegerLis
         return apply(leftVal, rightVal);
     }
     
-    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         BigInteger leftVal = left instanceof BigIntegerListExpression ? 
@@ -77,40 +73,25 @@ public abstract class BinaryOperation implements TripleExpression, BigIntegerLis
         if (!(right instanceof BinaryOperation)) return false;
         BinaryOperation rightOp = (BinaryOperation) right;
         
-        // Если приоритет правого операнда ниже - нужны скобки
         if (rightOp.getPriority() < getPriority()) {
             return true;
         }
         
-        // Если приоритет одинаковый
         if (rightOp.getPriority() == getPriority()) {
-            // Для min/max: всегда нужны скобки справа, если операции разные
-            // Например: "a min (b max c)" vs "a max (b min c)"
-            if (getPriority() == 0) { // min/max приоритет
-                // Если операции одинаковые (min min или max max), скобки не нужны
+            if (getPriority() == 0) { 
                 if (getClass().equals(rightOp.getClass())) {
                     return false;
                 }
-                // Если разные (min max или max min), скобки НУЖНЫ
                 return true;
             }
             
-            // Для остальных операций (+, -, *, /)
-            // Если операции одинаковые
             if (getClass().equals(rightOp.getClass())) {
-                // Для ассоциативных (+ и +, * и *) скобки не нужны
-                // Для неассоциативных (- и -, / и /) скобки НУЖНЫ!
                 return !isAssociative();
             }
             
-            // Если операции разные на одном уровне
             if (!isAssociative()) {
                 return true;
             }
-            
-            // Для ассоциативной текущей операции:
-            // + с - : можно без скобок (10 + 3 - 2 = 10 + (3 - 2))
-            // * с / : нужны скобки (10 * 3 / 2 ≠ 10 * (3 / 2))
             return getPriority() == 2;
         }
         

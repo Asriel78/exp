@@ -14,25 +14,21 @@ public class Const implements TripleExpression, BigIntegerListExpression, Expres
         this.value = value;
     }
     
-    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
         return value.intValue();
     }
     
-    // Для TripleExpression (три переменные)
     @Override
     public int evaluate(int x, int y, int z) {
         return value.intValue();
     }
     
-    // Для ListExpression (список Integer)
     @Override
     public int evaluate(List<Integer> variables) {
         return value.intValue();
     }
     
-    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         if (value instanceof BigInteger) {
