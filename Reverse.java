@@ -11,30 +11,20 @@ public class Reverse implements TripleExpression, BigIntegerListExpression, Expr
     }
     
     // Переворачивает цифры числа: 12345 -> 54321, -12345 -> -54321
+    // Переполнение обрабатывается естественным образом (как в int)
     private int reverseInt(int value) {
-        long lValue = value;
-        long sign = 1;
+        boolean negative = value < 0;
         
-        if (lValue < 0) {
-            sign = -1;
-            lValue = -lValue;
-        }
-        
-        long result = 0;
-        while (lValue != 0) {
-            long digit = lValue % 10;
-            lValue /= 10;
+        int result = 0;
+        while (value != 0) {
+            int digit = value % 10;
+            value /= 10;
             result = result * 10 + digit;
         }
         
-        result *= sign;
-        
-        // Проверяем, влезает ли в int
-        if (result < Integer.MIN_VALUE || result > Integer.MAX_VALUE) {
-            return 0;
-        }
-        
-        return (int) result;
+        // Если исходное число было отрицательным, результат уже будет правильного знака
+        // благодаря тому, что % и / в Java сохраняют знак для отрицательных чисел
+        return result;
     }
     
     private BigInteger reverseBigInteger(BigInteger value) {

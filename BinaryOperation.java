@@ -84,16 +84,26 @@ public abstract class BinaryOperation implements TripleExpression, BigIntegerLis
         
         // Если приоритет одинаковый
         if (rightOp.getPriority() == getPriority()) {
+            // Для min/max: всегда нужны скобки справа, если операции разные
+            // Например: "a min (b max c)" vs "a max (b min c)"
+            if (getPriority() == 0) { // min/max приоритет
+                // Если операции одинаковые (min min или max max), скобки не нужны
+                if (getClass().equals(rightOp.getClass())) {
+                    return false;
+                }
+                // Если разные (min max или max min), скобки НУЖНЫ
+                return true;
+            }
+            
+            // Для остальных операций (+, -, *, /)
             // Если операции одинаковые
             if (getClass().equals(rightOp.getClass())) {
                 // Для ассоциативных (+ и +, * и *) скобки не нужны
                 // Для неассоциативных (- и -, / и /) скобки НУЖНЫ!
-                // Например: 1 - (2 - 3) ≠ 1 - 2 - 3
                 return !isAssociative();
             }
             
-            // Если операции разные
-            // Для неассоциативной текущей операции скобки всегда нужны
+            // Если операции разные на одном уровне
             if (!isAssociative()) {
                 return true;
             }
