@@ -25,7 +25,7 @@ public class ExpressionParser implements ListParser {
         return result;
     }
     
-    // Уровень 1: min, max (самый низкий приоритет)
+    // Уровень 1: +, - (самый низкий приоритет)
     private ListExpression parseExpression() {
         return parseAddSubtract();
     }
@@ -38,9 +38,13 @@ public class ExpressionParser implements ListParser {
             skipWhitespace();
             if (pos >= expression.length()) break;
             
-            if (checkWord("+")) {
+            char ch = expression.charAt(pos);
+            
+            if (ch == '+') {
+                pos++;
                 result = new Add((TripleExpression) result, (TripleExpression) parseMultiplyDivide());
-            } else if (checkWord("-")) {
+            } else if (ch == '-') {
+                pos++;
                 result = new Subtract((TripleExpression) result, (TripleExpression) parseMultiplyDivide());
             } else {
                 break;
@@ -58,9 +62,13 @@ public class ExpressionParser implements ListParser {
             skipWhitespace();
             if (pos >= expression.length()) break;
             
-            if (checkWord("*")) {
+            char ch = expression.charAt(pos);
+            
+            if (ch == '*') {
+                pos++;
                 result = new Multiply((TripleExpression) result, (TripleExpression) parseUnary());
-            } else if (checkWord("/")) {
+            } else if (ch == '/') {
+                pos++;
                 result = new Divide((TripleExpression) result, (TripleExpression) parseUnary());
             } else {
                 break;
@@ -70,7 +78,7 @@ public class ExpressionParser implements ListParser {
         return result;
     }
     
-    // Уровень 4: унарные операции (-, reverse и т.д.)
+    // Уровень 4: унарные операции (-)
     private ListExpression parseUnary() {
         skipWhitespace();
         
@@ -79,8 +87,33 @@ public class ExpressionParser implements ListParser {
         }
         
         // Унарный минус
-        if (checkWord("-")) {
-            return new Subtract((TripleExpression) new Const(0), (TripleExpression) parseUnary());
+        if (expression.charAt(pos) == '-') {
+            int minusPos = pos;
+            pos++;
+            
+            // Проверяем, есть ли пробел после минуса
+            // Если пробела НЕТ и сразу идёт цифра, то это отрицательное число
+            boolean hasSpace = (pos < expression.length() && Character.isWhitespace(expression.charAt(pos)));
+            skipWhitespace();
+            
+            // Парсим отрицательное число только если НЕТ пробела после минуса
+            if (!hasSpace && pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
+                int start = pos;
+                while (pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
+                    pos++;
+                }
+                String numStr = expression.substring(start, pos);
+                try {
+                    int value = Integer.parseInt(numStr);
+                    return new Const(-value);
+                } catch (NumberFormatException e) {
+                    BigInteger value = new BigInteger(numStr);
+                    return new Const(value.negate());
+                }
+            }
+            
+            // Иначе это унарный минус для выражения
+            return new Negate((TripleExpression) parseUnary());
         }
         
         return parsePrimary();
@@ -111,7 +144,16 @@ public class ExpressionParser implements ListParser {
         // Переменная $0, $1, $2, ...
         if (ch == '$') {
             pos++;
-            int varIndex = parseInteger();
+            if (pos >= expression.length() || !Character.isDigit(expression.charAt(pos))) {
+                throw error("Expected variable index after $");
+            }
+            
+            int start = pos;
+            while (pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
+                pos++;
+            }
+            
+            int varIndex = Integer.parseInt(expression.substring(start, pos));
             if (varIndex < 0 || varIndex >= variables.size()) {
                 throw error("Variable index out of bounds: $" + varIndex);
             }
@@ -120,71 +162,22 @@ public class ExpressionParser implements ListParser {
         
         // Число
         if (Character.isDigit(ch)) {
-            return parseNumber();
-        }
-        
-        throw error("Unexpected character: '" + ch + "'");
-    }
-    
-    // Парсинг целого числа (константа)
-    private ListExpression parseNumber() {
-        skipWhitespace();
-        int start = pos;
-        
-        while (pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
-            pos++;
-        }
-        
-        String numStr = expression.substring(start, pos);
-        
-        try {
-            int value = Integer.parseInt(numStr);
-            return new Const(value);
-        } catch (NumberFormatException e) {
-            // Если не влезает в int, используем BigInteger
-            BigInteger value = new BigInteger(numStr);
-            return new Const(value);
-        }
-    }
-    
-    // Парсинг целого числа (для индекса переменной)
-    private int parseInteger() {
-        skipWhitespace();
-        int start = pos;
-        
-        while (pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
-            pos++;
-        }
-        
-        if (start == pos) {
-            throw error("Expected number");
-        }
-        
-        return Integer.parseInt(expression.substring(start, pos));
-    }
-    
-    // Проверка и парсинг слова/оператора
-    private boolean checkWord(String word) {
-        skipWhitespace();
-        
-        if (pos + word.length() > expression.length()) {
-            return false;
-        }
-        
-        if (!expression.substring(pos, pos + word.length()).equals(word)) {
-            return false;
-        }
-        
-        // Проверяем, что после слова нет буквы/цифры (для операций типа "min", "max")
-        if (word.length() > 1 && pos + word.length() < expression.length()) {
-            char next = expression.charAt(pos + word.length());
-            if (Character.isLetterOrDigit(next)) {
-                return false;
+            int start = pos;
+            while (pos < expression.length() && Character.isDigit(expression.charAt(pos))) {
+                pos++;
+            }
+            
+            String numStr = expression.substring(start, pos);
+            try {
+                int value = Integer.parseInt(numStr);
+                return new Const(value);
+            } catch (NumberFormatException e) {
+                BigInteger value = new BigInteger(numStr);
+                return new Const(value);
             }
         }
         
-        pos += word.length();
-        return true;
+        throw error("Unexpected character: '" + ch + "'");
     }
     
     // Пропуск пробелов
