@@ -32,6 +32,7 @@ public class Main {
                 System.out.println("Ошибка: аргумент должен быть целым числом");
             }
         } else {
+            // Значение по умолчанию для проверки формулы из задания
             int x = 10;
             TripleExpression expr = new Subtract(
                 new Subtract(

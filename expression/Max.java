@@ -24,7 +24,7 @@ public class Max extends BinaryOperation {
     
     @Override
     protected int getPriority() {
-        return 0; 
+        return 0; // Самый низкий приоритет
     }
     
     @Override

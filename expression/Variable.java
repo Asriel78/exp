@@ -3,6 +3,7 @@ package expression;
 import java.math.BigInteger;
 import java.util.List;
 
+// Variable реализует все интерфейсы
 public class Variable implements TripleExpression, BigIntegerListExpression, Expression, ListExpression {
     private final Object identifier;
     
@@ -14,6 +15,7 @@ public class Variable implements TripleExpression, BigIntegerListExpression, Exp
         this.identifier = index;
     }
     
+    // Для Expression (одна переменная)
     @Override
     public int evaluate(int x) {
         if (identifier instanceof String) {
@@ -27,6 +29,7 @@ public class Variable implements TripleExpression, BigIntegerListExpression, Exp
         throw new IllegalArgumentException("Invalid variable for single argument");
     }
     
+    // Для TripleExpression (три переменные)
     @Override
     public int evaluate(int x, int y, int z) {
         if (identifier instanceof String) {
@@ -47,6 +50,7 @@ public class Variable implements TripleExpression, BigIntegerListExpression, Exp
         }
     }
     
+    // Для ListExpression (список Integer)
     @Override
     public int evaluate(List<Integer> variables) {
         if (identifier instanceof Integer) {
@@ -56,6 +60,7 @@ public class Variable implements TripleExpression, BigIntegerListExpression, Exp
         throw new IllegalStateException("Named variables not supported for List<Integer> evaluation");
     }
     
+    // Для BigIntegerListExpression (список BigInteger)
     @Override
     public BigInteger evaluateBi(List<BigInteger> variables) {
         if (identifier instanceof Integer) {
